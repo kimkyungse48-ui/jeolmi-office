@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Jeolmi Office · 절미 본부</title>
+<meta name="description" content="절미 본부 4개 파트를 한눈에 보는 경세 님의 개인 오피스 대시보드" />
+<meta name="theme-color" id="metaThemeColor" content="#F1F5F9" />
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="icon" href="assets/icon-192.png" />
+<link rel="apple-touch-icon" href="assets/icon-192.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-title" content="Jeolmi Office" />
+<link rel="stylesheet" href="styles.css?v=3" />
+</head>
+<body>
+<script>
+  /* 야간 모드 깜빡임 방지 — 앱 스크립트보다 먼저 저장된 테마를 적용한다 */
+  (function () {
+    try {
+      var saved = JSON.parse(localStorage.getItem('jeolmi-office.v1') || '{}');
+      if (saved && saved.theme === 'night') {
+        document.body.classList.add('theme-night');
+        var m = document.getElementById('metaThemeColor');
+        if (m) m.setAttribute('content', '#0F172A');
+      }
+    } catch (e) {}
+  })();
+</script>
+<div class="app">
+
+  <header class="topbar">
+    <div class="brand">
+      <img class="brand-mark" src="assets/icon-192.png" alt="Jeolmi Office 아이콘" width="40" height="40" />
+      <div class="brand-text">
+        <h1>Jeolmi Office</h1>
+        <p>절미 본부 · 4개 파트 가동 중</p>
+      </div>
+    </div>
+    <span class="live" aria-label="실시간 가동 중">
+      <i class="live-dot" aria-hidden="true"></i><span>LIVE</span>
+    </span>
+  </header>
+
+  <nav class="tabs" role="tablist" aria-label="오피스 탭">
+    <button class="tab is-active" role="tab" aria-selected="true" aria-controls="panel-office" data-tab="office">오피스</button>
+    <button class="tab" role="tab" aria-selected="false" aria-controls="panel-meeting" data-tab="meeting">회의실</button>
+    <button class="tab" role="tab" aria-selected="false" aria-controls="panel-studio" data-tab="studio">작업실</button>
+    <button class="tab" role="tab" aria-selected="false" aria-controls="panel-status" data-tab="status">현황</button>
+    <button class="tab" role="tab" aria-selected="false" aria-controls="panel-memo" data-tab="memo">메모</button>
+  </nav>
+
+  <main class="main">
+
+    <!-- 오피스 -->
+    <section class="panel is-active" id="panel-office" role="tabpanel" aria-label="오피스">
+      <div class="banner card">
+        <span class="eyebrow">Workspace</span>
+        <h2>대표님, 4개 파트가 대기 중이에요</h2>
+        <p>방이나 담당자를 탭하면 최근 진행 현황을 바로 볼 수 있어요.</p>
+      </div>
+
+      <div class="chips" role="group" aria-label="오피스 상태">
+        <button class="chip chip-theme" id="themeChip" aria-pressed="false" aria-label="야간 모드 켜기" title="야간 모드 켜기">
+          <span class="chip-emoji" id="themeEmoji">🌙</span><span class="chip-label" id="themeLabel">야간</span>
+        </button>
+        <button class="chip chip-motion is-on" id="motionChip" aria-pressed="true">
+          <span class="chip-emoji">✨</span><span class="chip-label">모션 ON</span>
+        </button>
+        <button class="chip" id="partsChip">
+          <span class="chip-dot" aria-hidden="true"></span><span>4개 파트 가동</span>
+        </button>
+        <button class="chip" id="levelChip">
+          <span class="chip-emoji">🩷</span><span>Lv.3 절미</span>
+        </button>
+      </div>
+
+      <div class="stage card">
+        <div class="stage-inner" id="stageInner">
+          <img class="office-bg" id="officeBg" src="assets/office-bg.jpg" width="1100" height="1100"
+               alt="따뜻한 우드 톤의 미니어처 오피스, 지휘실·대회의실·작업실·라운지가 한눈에 보인다" />
+
+          <button class="pin pin-hq" data-room="hq" style="left:52%;top:34.5%">
+            <span class="pin-glow" aria-hidden="true"></span><span class="pin-emoji">🎯</span><span>지휘실</span>
+          </button>
+          <button class="pin pin-meet" data-room="meet" style="left:18%;top:52%">
+            <span class="pin-glow" aria-hidden="true"></span><span class="pin-emoji">🏛️</span><span>대회의실</span>
+          </button>
+          <button class="pin pin-work" data-room="work" style="left:50%;top:60%">
+            <span class="pin-glow" aria-hidden="true"></span><span class="pin-emoji">💻</span><span>작업실</span>
+          </button>
+          <button class="pin pin-event" data-room="event" style="left:83%;top:42%">
+            <span class="pin-glow" aria-hidden="true"></span><span class="pin-emoji">🎁</span><span>이벤트·주식</span>
+          </button>
+          <button class="pin pin-lounge" data-room="lounge" style="left:76%;top:83%">
+            <span class="pin-glow" aria-hidden="true"></span><span class="pin-emoji">☕</span><span>라운지</span>
+          </button>
+        </div>
+      </div>
+      <p class="hint">핀을 탭하면 파트별 상태와 할 일을 바로 확인하고 체크할 수 있어요.</p>
+    </section>
+
+    <!-- 회의실 -->
+    <section class="panel" id="panel-meeting" role="tabpanel" aria-label="회의실" hidden>
+      <div class="card today">
+        <div class="today-top">
+          <span class="eyebrow">Today</span>
+          <span class="today-date" id="todayDate">11월 27일 금요일</span>
+        </div>
+        <h2 class="today-title">오늘의 일정과 할 일</h2>
+        <p class="today-sub">체크하면 현황과 타임라인에 바로 반영돼요.</p>
+        <div class="mini-progress">
+          <div class="mini-bar"><i id="meetBar" style="width:0%"></i></div>
+          <span id="meetCount">0 / 0</span>
+        </div>
+      </div>
+
+      <div class="card list-card">
+        <div class="list-head">
+          <h3>체크리스트</h3>
+          <span class="list-badge" id="meetBadge">진행 중</span>
+        </div>
+        <ul class="tasklist" id="meetList"></ul>
+        <form class="addrow" id="meetForm" autocomplete="off">
+          <input class="add-input" id="meetInput" type="text" maxlength="80" placeholder="할 일을 적어 넣어 주세요" aria-label="할 일 추가" />
+          <button class="add-btn" type="submit">추가</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- 작업실 -->
+    <section class="panel" id="panel-studio" role="tabpanel" aria-label="작업실" hidden>
+      <div class="banner card">
+        <span class="eyebrow">Studio</span>
+        <h2>절미와 함께 만든 도구들</h2>
+        <p>폰에서 바로 열 수 있는 내 웹앱이에요. 새 도구 링크도 여기서 추가해요.</p>
+      </div>
+
+      <div class="tool-grid" id="toolGrid"></div>
+      <p class="hint">🗂 TabDeck은 윈도우 PC에서 실행하는 스트림덱 도구예요.</p>
+
+      <div class="card list-card">
+        <div class="list-head"><h3>새 도구 링크 추가</h3></div>
+        <form class="stackform" id="toolForm" autocomplete="off">
+          <div class="field-row">
+            <input class="add-input" id="toolEmoji" type="text" maxlength="2" placeholder="🔧" aria-label="아이콘" />
+            <input class="add-input grow" id="toolName" type="text" maxlength="30" placeholder="이름 (예: 날씨 위젯)" aria-label="도구 이름" />
+          </div>
+          <input class="add-input" id="toolUrl" type="text" inputmode="url" autocapitalize="off" spellcheck="false" maxlength="200" placeholder="https://..." aria-label="도구 주소" />
+          <button class="full-btn" type="submit">도구 추가</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- 현황 -->
+    <section class="panel" id="panel-status" role="tabpanel" aria-label="현황" hidden>
+      <div class="banner card">
+        <span class="eyebrow">Status</span>
+        <h2>4개 파트 가동 현황</h2>
+        <p>오늘 절미가 어디까지 했는지 한눈에 보여 드려요.</p>
+      </div>
+
+      <div class="status-grid" id="statusGrid"></div>
+
+      <div class="card list-card">
+        <div class="list-head">
+          <h3>최근 업데이트</h3>
+          <span class="list-badge soft">자동 기록</span>
+        </div>
+        <ul class="timeline" id="timeline"></ul>
+      </div>
+    </section>
+
+    <!-- 메모 -->
+    <section class="panel" id="panel-memo" role="tabpanel" aria-label="메모" hidden>
+      <div class="card memo-compose">
+        <div class="today-top">
+          <span class="eyebrow">Quick Note</span>
+          <span class="today-date">떠오를 때 바로</span>
+        </div>
+        <form id="memoForm" autocomplete="off">
+          <textarea id="memoInput" rows="3" maxlength="500" placeholder="대표님, 생각나는 걸 편하게 적어 두세요." aria-label="메모 입력"></textarea>
+          <div class="memo-actions">
+            <span class="memo-count" id="memoCount">0 / 500</span>
+            <button class="add-btn" type="submit">메모 저장</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="card list-card">
+        <div class="list-head">
+          <h3>메모 목록</h3>
+          <span class="list-badge soft" id="memoBadge">0개</span>
+        </div>
+        <ul class="memolist" id="memoList"></ul>
+        <p class="empty" id="memoEmpty">아직 메모가 없어요. 첫 메모를 남겨 보세요.</p>
+      </div>
+    </section>
+
+  </main>
+
+  <p class="foot">Jeolmi Office · 절미가 대표님 대신 챙기는 작은 본부</p>
+</div>
+
+<!-- 바텀시트 -->
+<div class="sheet-wrap" id="sheetWrap" hidden>
+  <div class="scrim" data-close="1"></div>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+    <div class="sheet-grip" aria-hidden="true"></div>
+    <div class="sheet-head">
+      <span class="sheet-emoji" id="sheetEmoji">🎯</span>
+      <div class="sheet-titles">
+        <h3 id="sheetTitle">지휘실</h3>
+        <p id="sheetMeta">비서실 · 절미</p>
+      </div>
+      <span class="sheet-badge" id="sheetBadge">가동 중</span>
+      <button class="icon-btn" data-close="1" aria-label="닫기">✕</button>
+    </div>
+    <div class="sheet-body" id="sheetBody"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="app.js?v=3"></script>
+</body>
+</html>
