@@ -76,6 +76,8 @@ LD_LIBRARY_PATH=/workspace/.libs python3 scripts/test_live.py  # 실주소 (30�
 DRY_RUN=1 ./scripts/deploy_pages.sh                      # 푸시 없이 결과만 확인
 ```
 
+`sw.js`의 `CACHE` 이름(`jeolmi-office-v2`)과 `index.html`의 `styles.css?v=2`·`app.js?v=2`는 함께 올려야 합니다. 그래야 이미 앱을 설치한 폰에서도 예전 캐시가 아니라 새 화면이 바로 뜹니다.
+
 `gh-pages` 브랜치에 배포본만(미리보기·스크립트 제외, `.nojekyll` 포함) 올라갑니다. 저장소 **Settings → Pages**에서 Source = *Deploy from a branch*, Branch = **gh-pages / (root)** 로 한 번만 지정하면 `https://<계정>.github.io/<저장소>/`에서 열립니다.
 
 폰에서 그 주소를 연 뒤 브라우저 메뉴의 **홈 화면에 추가**를 누르면 앱처럼 설치됩니다.
