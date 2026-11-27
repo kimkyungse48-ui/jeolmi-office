@@ -263,7 +263,7 @@ def main():
             )
             check(
                 "야간 테마 컬러",
-                page.get_attribute('meta[name="theme-color"]', "content") == "#171310",
+                page.get_attribute('meta[name="theme-color"]', "content") == "#0F172A",
                 str(page.get_attribute('meta[name="theme-color"]', "content")),
             )
             contrast = page.evaluate(
@@ -297,6 +297,91 @@ def main():
                 "야간 가로 스크롤 없음",
                 page.evaluate("document.documentElement.scrollWidth <= 390"),
                 f"scrollWidth={page.evaluate('document.documentElement.scrollWidth')}",
+            )
+
+            # 디자인 규칙 3종(배경/카드 HEX, 16·12·16 수치, 단일 강조색) 검증
+            design = page.evaluate(
+                """() => {
+                  const parse = (c) => {
+                    const n = c.replace(/[^0-9.,]/g, ',').split(',').filter(Boolean).map(Number);
+                    return { r: n[0], g: n[1], b: n[2], a: n.length > 3 ? n[3] : 1 };
+                  };
+                  const hex = (c) => {
+                    const p = parse(c);
+                    return '#' + [p.r, p.g, p.b].map((v) => v.toString(16).padStart(2, '0').toUpperCase()).join('');
+                  };
+                  const hsl = (p) => {
+                    const r = p.r / 255, g = p.g / 255, b = p.b / 255;
+                    const max = Math.max(r, g, b), min = Math.min(r, g, b), l = (max + min) / 2, d = max - min;
+                    let h = 0;
+                    if (d > 0) {
+                      if (max === r) h = 60 * (((g - b) / d) % 6);
+                      else if (max === g) h = 60 * ((b - r) / d + 2);
+                      else h = 60 * ((r - g) / d + 4);
+                      if (h < 0) h += 360;
+                    }
+                    const s = d === 0 ? 0 : d / (1 - Math.abs(2 * l - 1));
+                    return { h: Math.round(h), s, l };
+                  };
+                  const px = (v) => parseFloat(v);
+
+                  // 1) 배경·카드 색상
+                  const bodyBg = hex(getComputedStyle(document.body).backgroundColor);
+                  const cards = Array.from(document.querySelectorAll('.card'))
+                    .filter((el) => el.offsetParent !== null || el.classList.contains('stage') || el.classList.contains('banner'))
+                    .map((el) => hex(getComputedStyle(el).backgroundColor));
+                  const surfaces = Array.from(document.querySelectorAll('.tool, .status-card, .memo'))
+                    .map((el) => hex(getComputedStyle(el).backgroundColor));
+
+                  // 2) 여백·간격·라운드
+                  const boxes = ['.banner', '.stage', '.tool', '.status-card', '.memo', '.memo-compose', '.list-card'];
+                  const spacing = boxes.map((sel) => {
+                    const el = document.querySelector(sel);
+                    if (!el) return { sel, missing: true };
+                    const s = getComputedStyle(el);
+                    return { sel, pad: [s.paddingTop, s.paddingRight, s.paddingBottom, s.paddingLeft].map(px),
+                             radius: px(s.borderTopLeftRadius), mb: px(s.marginBottom) };
+                  });
+                  const gapGrid = ['.tool-grid', '.status-grid', '.memolist']
+                    .map((sel) => { const el = document.querySelector(sel); return el ? { sel, gap: px(getComputedStyle(el).rowGap || getComputedStyle(el).gap) } : { sel, gap: null }; });
+
+                  // 3) 색상이 섞여 있지 않은지: 화면에 보이는 모든 요소의 배경·글자·테두리 색
+                  const chromatic = [];
+                  const black = [];
+                  document.querySelectorAll('.app *, .sheet *, .toast').forEach((el) => {
+                    const st = getComputedStyle(el);
+                    if (st.display === 'none' || st.visibility === 'hidden') return;
+                    const rect = el.getBoundingClientRect();
+                    if (!rect.width && !rect.height) return;
+                    ['backgroundColor', 'color', 'borderTopColor'].forEach((prop) => {
+                      const p = parse(st[prop]);
+                      if (p.a < 0.05) return;
+                      if (p.r === 0 && p.g === 0 && p.b === 0) { black.push(el.className + ':' + prop); return; }
+                      const c = hsl(p);
+                      if (c.s > 0.25 && c.l > 0.12 && c.l < 0.92) chromatic.push({ cls: String(el.className), prop, hex: hex(st[prop]), h: c.h, s: Math.round(c.s * 100) });
+                    });
+                  });
+                  return { bodyBg, cards: [...new Set(cards)], surfaces: [...new Set(surfaces)], spacing, gapGrid, chromatic, black,
+                           sheetBg: hex(getComputedStyle(document.querySelector('.sheet')).backgroundColor) };
+                }"""
+            )
+            check("야간 배경 #0F172A", design["bodyBg"] == "#0F172A", design["bodyBg"])
+            check("야간 카드 배경 #1E293B", design["cards"] == ["#1E293B"], str(design["cards"]))
+            check("야간 서피스 배경 #1E293B", set(design["surfaces"]) <= {"#1E293B"}, str(design["surfaces"]))
+            check("야간 바텀시트 배경 #1E293B", design["sheetBg"] == "#1E293B", design["sheetBg"])
+            check("순수 검정(#000000) 사용 없음", len(design["black"]) == 0, str(design["black"][:4]))
+            pad_bad = [d for d in design["spacing"] if not d.get("missing") and any(v != 16 for v in d["pad"])]
+            check("카드 안쪽 여백 16px", not pad_bad, str(pad_bad))
+            rad_bad = [d for d in design["spacing"] if not d.get("missing") and d["radius"] != 16]
+            check("카드 모서리 라운드 16px", not rad_bad, str(rad_bad))
+            gap_bad = [g for g in design["gapGrid"] if g["gap"] is not None and g["gap"] != 12]
+            check("카드 사이 간격 12px", not gap_bad, str(design["gapGrid"]))
+            hues = sorted({c["h"] for c in design["chromatic"]})
+            check("강조 색상 1가지(블루 #3B82F6 계열)", all(200 <= h <= 235 for h in hues), str(hues) + " " + str(design["chromatic"][:5]))
+            check(
+                "핵심 버튼 강조색 적용",
+                page.evaluate("getComputedStyle(document.querySelector('.add-btn')).backgroundColor") == "rgb(59, 130, 246)"
+                or page.evaluate("getComputedStyle(document.querySelector('.full-btn')).backgroundColor") == "rgb(59, 130, 246)",
             )
 
             # 확대된 글씨 크기 확인
@@ -378,7 +463,7 @@ def main():
                 page.reload(wait_until="networkidle")
                 page.wait_for_timeout(500)
             meta_theme = page.get_attribute('meta[name="theme-color"]', "content")
-            check("테마 컬러", meta_theme == "#F7F3EC", str(meta_theme))
+            check("테마 컬러", meta_theme == "#F1F5F9", str(meta_theme))
 
             # 모든 탭 가로 넘침 재확인
             for tab in ["office", "meeting", "studio", "status", "memo"]:

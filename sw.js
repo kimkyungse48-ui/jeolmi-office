@@ -1,10 +1,10 @@
 /* Jeolmi Office service worker */
-const CACHE = 'jeolmi-office-v2';
+const CACHE = 'jeolmi-office-v3';
 const ASSETS = [
   './',
   './index.html',
-  './styles.css?v=2',
-  './app.js?v=2',
+  './styles.css?v=3',
+  './app.js?v=3',
   './manifest.webmanifest',
   './assets/office-bg.jpg',
   './assets/office-bg-night.jpg',

@@ -83,7 +83,7 @@
       alt: '밤이 된 미니어처 오피스, 창밖은 어두운 밤이고 스탠드와 벽등 불빛만 따뜻하게 켜져 있다'
     }
   };
-  const THEME_COLOR = { day: '#F7F3EC', night: '#171310' };
+  const THEME_COLOR = { day: '#F1F5F9', night: '#0F172A' };
 
   /* ---------- 상태 ---------- */
   const minutesAgo = (m) => new Date(Date.now() - m * 60000).toISOString();
@@ -453,7 +453,7 @@
     }).join('');
     const totalDone = ['hq', 'meet', 'work', 'event'].reduce((n, id) => n + countDone(id).done, 0);
     openSheet({
-      emoji: '🟢',
+      emoji: '🏢',
       title: '4개 파트 가동 중',
       meta: '절미 본부 · 실시간 상태',
       badge: 'LIVE',
