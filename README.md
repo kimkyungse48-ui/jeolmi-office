@@ -41,7 +41,8 @@ jeolmi-office/
 │   └── icon-180.png        iOS 홈 화면 아이콘
 ├── scripts/
 │   ├── make_icons.py       아이콘 + 경량 배경 재생성
-│   ├── test_app.py         Playwright 자동 검증(390x844)
+│   ├── test_app.py         Playwright 자동 검증(390x844, 로컬)
+│   ├── test_live.py        배포 주소 야간 모드·확대 검증
 │   └── deploy_pages.sh     GitHub Pages(gh-pages) 배포
 └── preview-*.png           화면 캡처(로컬 검증용, 저장소에는 올리지 않음)
 ```
@@ -59,7 +60,8 @@ python3 -m http.server 8765
 ## 검증
 
 ```bash
-LD_LIBRARY_PATH=/workspace/.libs python3 scripts/test_app.py
+LD_LIBRARY_PATH=/workspace/.libs python3 scripts/test_app.py   # 로컬 (84개 항목)
+LD_LIBRARY_PATH=/workspace/.libs python3 scripts/test_live.py  # 실주소 (30개 항목)
 ```
 
 390x844 모바일 뷰포트에서 콘솔 에러 0건, 탭 전환, 핀 모달, 모션 토글, 체크리스트·메모·도구 추가/유지, 야간 모드(전환·배경·대비·유지·글씨 크기), 탭별 가로 스크롤 없음, 오프라인 재실행까지 84개 항목을 확인합니다. `preview-*.png`(야간 메인은 `preview-night.png`)가 다시 찍힙니다.
