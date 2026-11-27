@@ -70,6 +70,21 @@
     { emoji: '🔗', name: '링크네스트', url: 'https://grand-khapse-7e2189.netlify.app' }
   ];
 
+  /* ---------- 배경(주간/야간) ---------- */
+  const BG = {
+    day: {
+      jpg: 'assets/office-bg.jpg',
+      png: 'assets/office-bg.png',
+      alt: '따뜻한 우드 톤의 미니어처 오피스, 지휘실·대회의실·작업실·라운지가 한눈에 보인다'
+    },
+    night: {
+      jpg: 'assets/office-bg-night.jpg',
+      png: 'assets/office-bg-night.png',
+      alt: '밤이 된 미니어처 오피스, 창밖은 어두운 밤이고 스탠드와 벽등 불빛만 따뜻하게 켜져 있다'
+    }
+  };
+  const THEME_COLOR = { day: '#F7F3EC', night: '#171310' };
+
   /* ---------- 상태 ---------- */
   const minutesAgo = (m) => new Date(Date.now() - m * 60000).toISOString();
 
@@ -80,6 +95,7 @@
     });
     return {
       version: 1,
+      theme: 'day',
       motion: true,
       tasks,
       tools: DEFAULT_TOOLS.map((t) => ({ id: uid(), ...t })),
@@ -109,6 +125,7 @@
       if (!Array.isArray(merged.tools)) merged.tools = base.tools;
       if (!Array.isArray(merged.memos)) merged.memos = [];
       if (!Array.isArray(merged.events)) merged.events = base.events;
+      merged.theme = parsed.theme === 'night' ? 'night' : 'day';
       return merged;
     } catch (e) {
       return seedState();
@@ -281,7 +298,51 @@
     $('.chip-label', chip).textContent = on ? '모션 ON' : '모션 OFF';
   }
 
+  /* ---------- 야간 모드 ---------- */
+  function setOfficeBg(mode) {
+    const img = $('#officeBg');
+    if (!img) return;
+    const g = BG[mode] || BG.day;
+    if (img.getAttribute('src') !== g.jpg) {
+      // JPEG가 없거나 못 불러오면 PNG로 넘어간다
+      img.onerror = function () {
+        img.onerror = null;
+        img.src = g.png;
+      };
+      img.src = g.jpg;
+    }
+    img.alt = g.alt;
+  }
+
+  function renderTheme() {
+    const night = state.theme === 'night';
+    document.body.classList.toggle('theme-night', night);
+
+    const chip = $('#themeChip');
+    if (chip) {
+      chip.classList.toggle('is-on', night);
+      chip.setAttribute('aria-pressed', night ? 'true' : 'false');
+      chip.setAttribute('aria-label', night ? '주간 모드로 바꾸기' : '야간 모드 켜기');
+      chip.setAttribute('title', night ? '주간 모드로 바꾸기' : '야간 모드 켜기');
+      $('#themeEmoji').textContent = night ? '☀️' : '🌙';
+      $('#themeLabel').textContent = night ? '주간' : '야간';
+    }
+
+    const meta = $('#metaThemeColor');
+    if (meta) meta.setAttribute('content', night ? THEME_COLOR.night : THEME_COLOR.day);
+
+    setOfficeBg(night ? 'night' : 'day');
+  }
+
+  function toggleTheme() {
+    state.theme = state.theme === 'night' ? 'day' : 'night';
+    save();
+    renderTheme();
+    toast(state.theme === 'night' ? '야간 모드로 바꿨어요 🌙' : '주간 모드로 바꿨어요 ☀️');
+  }
+
   function renderAll() {
+    renderTheme();
     renderMotion();
     renderMeeting();
     renderTools();
@@ -535,6 +596,8 @@
         openParts();
       } else if (chip.id === 'levelChip') {
         openLevel();
+      } else if (chip.id === 'themeChip') {
+        toggleTheme();
       }
       return;
     }
@@ -599,6 +662,8 @@
   /* ---------- 시작 ---------- */
   state = load();
   save();
+  // 야간 배경은 미리 받아 두어 토글할 때 바로 바뀌게 한다
+  if (BG.night.jpg) { const pre = new Image(); pre.src = BG.night.jpg; }
   renderAll();
   window.JeolmiOffice = { state, renderAll, openRoom, openParts, openLevel, closeSheet };
 })();

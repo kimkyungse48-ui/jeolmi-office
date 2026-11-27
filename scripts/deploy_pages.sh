@@ -36,8 +36,9 @@ mkdir -p "$SITE/assets"
 # 배포에 필요한 파일만 복사 (미리보기 이미지·스크립트는 제외)
 cp "$SRC_DIR/index.html" "$SRC_DIR/styles.css" "$SRC_DIR/app.js" \
    "$SRC_DIR/manifest.webmanifest" "$SRC_DIR/sw.js" "$SITE/"
-cp "$SRC_DIR/assets/office-bg.png" "$SRC_DIR/assets/office-bg.jpg" "$SRC_DIR/assets/icon-192.png" \
-   "$SRC_DIR/assets/icon-512.png" "$SITE/assets/" 2>/dev/null || true
+cp "$SRC_DIR/assets/office-bg.png" "$SRC_DIR/assets/office-bg.jpg" \
+   "$SRC_DIR/assets/office-bg-night.png" "$SRC_DIR/assets/office-bg-night.jpg" \
+   "$SRC_DIR/assets/icon-192.png" "$SRC_DIR/assets/icon-512.png" "$SITE/assets/" 2>/dev/null || true
 # GitHub Pages 에서 Jekyll 처리를 건너뛰게 함
 touch "$SITE/.nojekyll"
 

@@ -167,6 +167,13 @@ def main():
             # 6) 작업실 도구 추가
             page.click('.tab[data-tab="studio"]')
             page.wait_for_timeout(250)
+            check(
+                "작업실 가로 스크롤 없음",
+                page.evaluate("document.documentElement.scrollWidth <= 390"),
+                f"scrollWidth={page.evaluate('document.documentElement.scrollWidth')}",
+            )
+            tool_bb = page.locator(".tool").nth(1).bounding_box()
+            check("도구 카드 2열 유지", tool_bb["x"] + tool_bb["width"] <= 381, str(tool_bb))
             t_before = page.locator(".tool").count()
             page.fill("#toolEmoji", "🧪")
             page.fill("#toolName", "테스트 도구")
@@ -237,6 +244,116 @@ def main():
             page.click("#sheetWrap .icon-btn")
             page.wait_for_timeout(250)
 
+            # 10-B) 야간 모드
+            page.click('.tab[data-tab="office"]')
+            page.wait_for_timeout(250)
+            day_bg = page.evaluate("document.querySelector('#officeBg').currentSrc")
+            check("주간 배경", "office-bg.jpg" in day_bg and "night" not in day_bg, day_bg)
+            page.click("#themeChip")
+            page.wait_for_timeout(700)
+            check("야간 모드 클래스", page.evaluate("document.body.classList.contains('theme-night')"))
+            check("야간 칩 상태", page.get_attribute("#themeChip", "aria-pressed") == "true")
+            check("야간 칩 라벨", "주간" in page.inner_text("#themeChip"), page.inner_text("#themeChip"))
+            night_bg = page.evaluate("document.querySelector('#officeBg').currentSrc")
+            check("야간 배경 이미지 로드", "office-bg-night.jpg" in night_bg, night_bg)
+            check(
+                "야간 배경 실제 디코딩",
+                page.evaluate("document.querySelector('#officeBg').naturalWidth") > 500,
+                str(page.evaluate("document.querySelector('#officeBg').naturalWidth")),
+            )
+            check(
+                "야간 테마 컬러",
+                page.get_attribute('meta[name="theme-color"]', "content") == "#171310",
+                str(page.get_attribute('meta[name="theme-color"]', "content")),
+            )
+            contrast = page.evaluate(
+                """() => {
+                  const lum = (c) => {
+                    const m = c.match(/\\d+\\.?\\d*/g).slice(0, 3).map((n) => {
+                      const v = parseInt(n, 10) / 255;
+                      return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+                    });
+                    return 0.2126 * m[0] + 0.7152 * m[1] + 0.0722 * m[2];
+                  };
+                  const body = getComputedStyle(document.body);
+                  const card = getComputedStyle(document.querySelector('.banner'));
+                  const a = lum(body.color), b = lum(card.backgroundColor);
+                  const hi = Math.max(a, b), lo = Math.min(a, b);
+                  return Math.round(((hi + 0.05) / (lo + 0.05)) * 100) / 100;
+                }"""
+            )
+            check("야간 글씨 대비 4.5:1 이상", contrast >= 4.5, str(contrast))
+            check(
+                "야간 카드가 어두운 색",
+                page.evaluate(
+                    """() => {
+                      const c = getComputedStyle(document.querySelector('.banner')).backgroundColor;
+                      const n = c.match(/\\d+/g).map(Number);
+                      return (n[0] + n[1] + n[2]) / 3 < 70;
+                    }"""
+                ),
+            )
+            check(
+                "야간 가로 스크롤 없음",
+                page.evaluate("document.documentElement.scrollWidth <= 390"),
+                f"scrollWidth={page.evaluate('document.documentElement.scrollWidth')}",
+            )
+
+            # 확대된 글씨 크기 확인
+            sizes = page.evaluate(
+                """() => ({
+                  body: parseFloat(getComputedStyle(document.body).fontSize),
+                  banner: parseFloat(getComputedStyle(document.querySelector('.banner h2')).fontSize),
+                  bannerP: parseFloat(getComputedStyle(document.querySelector('.banner p')).fontSize),
+                  tab: parseFloat(getComputedStyle(document.querySelector('.tab')).fontSize),
+                  pin: parseFloat(getComputedStyle(document.querySelector('.pin')).fontSize),
+                  hint: parseFloat(getComputedStyle(document.querySelector('.hint')).fontSize)
+                })"""
+            )
+            check("본문 글씨 16px", sizes["body"] == 16, str(sizes))
+            check("배너 제목 확대", sizes["banner"] >= 21, str(sizes["banner"]))
+            check("배너 본문 확대", sizes["bannerP"] >= 14, str(sizes["bannerP"]))
+            check("탭 글씨 확대", sizes["tab"] >= 14, str(sizes["tab"]))
+            check("핀 라벨 확대", sizes["pin"] >= 12, str(sizes["pin"]))
+            check("안내 글씨 확대", sizes["hint"] >= 12, str(sizes["hint"]))
+            check(
+                "오피스 맵 폭 확대(여백 축소)",
+                page.evaluate("document.querySelector('.stage').getBoundingClientRect().width") >= 366,
+                str(page.evaluate("document.querySelector('.stage').getBoundingClientRect().width")),
+            )
+
+            page.wait_for_timeout(2200)  # 토스트가 사라진 뒤 메인 화면을 담는다
+            page.screenshot(path=str(ROOT / "preview-night.png"), full_page=True)
+
+            # 야간 상태에서 핀·탭 동작
+            page.locator('.pin[data-room="hq"]').click(force=True)
+            page.wait_for_timeout(450)
+            check("야간 핀 클릭 시트", page.is_visible("#sheetWrap") and page.inner_text("#sheetTitle") == "지휘실")
+            check(
+                "바텀시트 할 일 글씨 확대",
+                page.evaluate("parseFloat(getComputedStyle(document.querySelector('#sheetTaskList .txt')).fontSize)") >= 15,
+                str(page.evaluate("parseFloat(getComputedStyle(document.querySelector('#sheetTaskList .txt')).fontSize)")),
+            )
+            page.screenshot(path=str(ROOT / "preview-night-sheet.png"))
+            page.keyboard.press("Escape")
+            page.wait_for_timeout(250)
+            for tab, panel in [("meeting", "#panel-meeting"), ("memo", "#panel-memo"), ("office", "#panel-office")]:
+                page.click(f'.tab[data-tab="{tab}"]')
+                page.wait_for_timeout(220)
+                check(f"야간 탭 전환: {tab}", page.is_visible(panel))
+            # 야간 모드 유지(새로고침)
+            page.reload(wait_until="networkidle")
+            page.wait_for_timeout(600)
+            check("새로고침 후 야간 유지", page.evaluate("document.body.classList.contains('theme-night')"))
+            check(
+                "새로고침 후 야간 배경",
+                "office-bg-night.jpg" in page.evaluate("document.querySelector('#officeBg').currentSrc"),
+            )
+            # 다시 주간으로
+            page.click("#themeChip")
+            page.wait_for_timeout(500)
+            check("주간 복귀", page.evaluate("!document.body.classList.contains('theme-night')"))
+
             # 11) PWA 자산
             manifest_status = page.evaluate("fetch('manifest.webmanifest').then(r => r.status)")
             check("manifest 응답", manifest_status == 200, str(manifest_status))
@@ -262,6 +379,16 @@ def main():
                 page.wait_for_timeout(500)
             meta_theme = page.get_attribute('meta[name="theme-color"]', "content")
             check("테마 컬러", meta_theme == "#F7F3EC", str(meta_theme))
+
+            # 모든 탭 가로 넘침 재확인
+            for tab in ["office", "meeting", "studio", "status", "memo"]:
+                page.click(f'.tab[data-tab="{tab}"]')
+                page.wait_for_timeout(180)
+                check(
+                    f"가로 스크롤 없음: {tab}",
+                    page.evaluate("document.documentElement.scrollWidth <= 390"),
+                    f"scrollWidth={page.evaluate('document.documentElement.scrollWidth')}",
+                )
 
             # 12) localStorage 키
             keys = page.evaluate("Object.keys(localStorage)")
